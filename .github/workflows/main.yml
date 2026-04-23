@@ -44,6 +44,9 @@ jobs:
                 theos-branch: 'main'
                 sdks-src: 'waruhachi/sdks'
                 sdks-branch: 'main'
+                libgcuniversal: true
+                libgcuniversal-src: 'waruhachi/LibGcUniversal'
+                libgcuniversal-branch: 'main'
 
             - name: Build Package
               shell: bash
