@@ -116,7 +116,16 @@ static void SBIconController_adjustFrame(SBIconController *self, SEL _cmd) {
 	[homeScreenPlayerLayer setFrame:[[[self view] layer] bounds]];
 }
 
-    NSURL* url = [GcImagePickerUtils videoURLFromDefaults:kPreferencesIdentifier withKey:kPreferenceKeyHomeScreenWallpaper];
+static void (*orig_SBHomeScreenViewController_viewDidLoad)(SBHomeScreenViewController *self,
+	SEL _cmd);
+static void override_SBHomeScreenViewController_viewDidLoad(SBHomeScreenViewController *self,
+	SEL _cmd) {
+	orig_SBHomeScreenViewController_viewDidLoad(self, _cmd);
+
+	// player
+	NSURL *url = [GcImagePickerUtils
+		videoURLFromDefaults:kPreferencesIdentifier
+					 withKey:kPreferenceKeyHomeScreenWallpaper];
 	if (!url) {
 		return;
 	}
@@ -132,9 +141,12 @@ static void SBIconController_adjustFrame(SBIconController *self, SEL _cmd) {
 		[homeScreenPlayer setVolume:pfHomeScreenVolume];
 	}
 
-    homeScreenPlayerLooper = [AVPlayerLooper playerLooperWithPlayer:homeScreenPlayer templateItem:homeScreenPlayerItem];
+	homeScreenPlayerLooper =
+		[AVPlayerLooper playerLooperWithPlayer:homeScreenPlayer
+								  templateItem:homeScreenPlayerItem];
 
-    homeScreenPlayerLayer = [AVPlayerLayer playerLayerWithPlayer:homeScreenPlayer];
+	homeScreenPlayerLayer =
+		[AVPlayerLayer playerLayerWithPlayer:homeScreenPlayer];
 	[homeScreenPlayerLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
 	[homeScreenPlayerLayer setFrame:[[[self view] layer] bounds]];
 
@@ -144,12 +156,16 @@ static void SBIconController_adjustFrame(SBIconController *self, SEL _cmd) {
 
 	[[[self view] layer] insertSublayer:homeScreenPlayerLayer atIndex:0];
 
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
+	[[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient
+										   error:nil];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(adjustFrame) name:@"enekoScreenRotated" object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(adjustFrame)
+												 name:@"enekoScreenRotated"
+											   object:nil];
 }
 
-static void SBIconController_adjustFrame(SBIconController* self, SEL _cmd) {
+static void SBHomeScreenViewController_adjustFrame(SBHomeScreenViewController *self, SEL _cmd) {
 	[homeScreenPlayerLayer setFrame:[[[self view] layer] bounds]];
 }
 
@@ -230,8 +246,29 @@ static void override_SBIconController_viewWillAppear(SBIconController *self,
 	}
 }
 
-static void (* orig_SBIconController_viewWillDisappear)(SBIconController* self, SEL _cmd, BOOL animated);
-static void override_SBIconController_viewWillDisappear(SBIconController* self, SEL _cmd, BOOL animated) {
+static void (*orig_SBHomeScreenViewController_viewWillAppear)(SBHomeScreenViewController *self,
+	SEL _cmd,
+	BOOL animated);
+static void override_SBHomeScreenViewController_viewWillAppear(SBHomeScreenViewController *self,
+	SEL _cmd,
+	BOOL animated) {
+	orig_SBHomeScreenViewController_viewWillAppear(self, _cmd, animated);
+
+	isHomeScreenVisible = YES;
+
+	if ((pfDisableInLowPowerMode && isInLowPowerMode) || isInCall) {
+		return;
+	}
+
+	if (homeScreenPlayer) {
+		[self adjustFrame];
+		[homeScreenPlayer play];
+	}
+
+	if (lockScreenPlayer && isLockScreenVisible) {
+		[lockScreenPlayer pause];
+	}
+}
 
 static void (*orig_SBIconController_viewWillDisappear)(SBIconController *self,
 	SEL _cmd,
@@ -256,9 +293,28 @@ static void override_SBIconController_viewWillDisappear(SBIconController *self,
 	}
 }
 
-static void (* orig_CCUIModularControlCenterOverlayViewController_viewWillAppear)(CCUIModularControlCenterOverlayViewController* self, SEL _cmd, BOOL animated);
-static void override_CCUIModularControlCenterOverlayViewController_viewWillAppear(CCUIModularControlCenterOverlayViewController* self, SEL _cmd, BOOL animated) {
-    orig_CCUIModularControlCenterOverlayViewController_viewWillAppear(self, _cmd, animated);
+static void (*orig_SBHomeScreenViewController_viewWillDisappear)(SBHomeScreenViewController *self,
+	SEL _cmd,
+	BOOL animated);
+static void override_SBHomeScreenViewController_viewWillDisappear(SBHomeScreenViewController *self,
+	SEL _cmd,
+	BOOL animated) {
+	orig_SBHomeScreenViewController_viewWillDisappear(self, _cmd, animated);
+
+	isHomeScreenVisible = NO;
+
+	if ((pfDisableInLowPowerMode && isInLowPowerMode) || isInCall) {
+		return;
+	}
+
+	if (homeScreenPlayer) {
+		[homeScreenPlayer pause];
+	}
+
+	if (lockScreenPlayer && isLockScreenVisible) {
+		[lockScreenPlayer play];
+	}
+}
 
 static void (
 	*orig_CCUIModularControlCenterOverlayViewController_viewWillAppear)(
@@ -709,8 +765,11 @@ __attribute((constructor)) static void initialize() {
 			(IMP)&override_SBIconController_viewDidLoad,
 			(IMP *)&orig_SBIconController_viewDidLoad);
 
-        class_addMethod(objc_getClass("SBIconController"), @selector(adjustFrame), (IMP)&SBIconController_adjustFrame, "v@:");
-        MSHookMessageEx(objc_getClass("SBIconController"), @selector(viewDidLoad), (IMP)&override_SBIconController_viewDidLoad, (IMP *)&orig_SBIconController_viewDidLoad);
+		class_addMethod(objc_getClass("SBHomeScreenViewController"), @selector(adjustFrame),
+			(IMP)&SBHomeScreenViewController_adjustFrame, "v@:");
+		MSHookMessageEx(objc_getClass("SBHomeScreenViewController"), @selector(viewDidLoad),
+			(IMP)&override_SBHomeScreenViewController_viewDidLoad,
+			(IMP *)&orig_SBHomeScreenViewController_viewDidLoad);
 	}
 
 	MSHookMessageEx(objc_getClass("CSCoverSheetViewController"),
@@ -728,25 +787,13 @@ __attribute((constructor)) static void initialize() {
 		@selector(viewWillDisappear:),
 		(IMP)&override_SBIconController_viewWillDisappear,
 		(IMP *)&orig_SBIconController_viewWillDisappear);
-    MSHookMessageEx(objc_getClass("CSCoverSheetViewController"), @selector(viewWillAppear:), (IMP)&override_CSCoverSheetViewController_viewWillAppear, (IMP *)&orig_CSCoverSheetViewController_viewWillAppear);
-    MSHookMessageEx(objc_getClass("CSCoverSheetViewController"), @selector(viewWillDisappear:), (IMP)&override_CSCoverSheetViewController_viewWillDisappear, (IMP *)&orig_CSCoverSheetViewController_viewWillDisappear);
-    MSHookMessageEx(objc_getClass("SBIconController"), @selector(viewWillAppear:), (IMP)&override_SBIconController_viewWillAppear, (IMP *)&orig_SBIconController_viewWillAppear);
-    MSHookMessageEx(objc_getClass("SBIconController"), @selector(viewWillDisappear:), (IMP)&override_SBIconController_viewWillDisappear, (IMP *)&orig_SBIconController_viewWillDisappear);
-    MSHookMessageEx(objc_getClass("CCUIModularControlCenterOverlayViewController"), @selector(viewWillAppear:), (IMP)&override_CCUIModularControlCenterOverlayViewController_viewWillAppear, (IMP *)&orig_CCUIModularControlCenterOverlayViewController_viewWillAppear);
-    MSHookMessageEx(objc_getClass("CCUIModularControlCenterOverlayViewController"), @selector(viewWillDisappear:), (IMP)&override_CCUIModularControlCenterOverlayViewController_viewWillDisappear, (IMP *)&orig_CCUIModularControlCenterOverlayViewController_viewWillDisappear);
-    MSHookMessageEx(objc_getClass("SBBacklightController"), @selector(turnOnScreenFullyWithBacklightSource:), (IMP)&override_SBBacklightController_turnOnScreenFullyWithBacklightSource, (IMP *)&orig_SBBacklightController_turnOnScreenFullyWithBacklightSource);
-    MSHookMessageEx(objc_getClass("SBLockScreenManager"), @selector(lockUIFromSource:withOptions:), (IMP)&override_SBLockScreenManager_lockUIFromSource_withOptions, (IMP *)&orig_SBLockScreenManager_lockUIFromSource_withOptions);
-    MSHookMessageEx(objc_getClass("SpringBoard"), @selector(noteInterfaceOrientationChanged:duration:logMessage:), (IMP)&override_SpringBoard_noteInterfaceOrientationChanged_duration_logMessage, (IMP *)&orig_SpringBoard_noteInterfaceOrientationChanged_duration_logMessage);
-    MSHookMessageEx(objc_getClass("SBMediaController"), @selector(isPlaying), (IMP)&override_SBMediaController_isPlaying, (IMP *)&orig_SBMediaController_isPlaying);
-    MSHookMessageEx(objc_getClass("TUCall"), @selector(status), (IMP)&override_TUCall_status, (IMP *)&orig_TUCall_status);
-    MSHookMessageEx(objc_getClass("SiriUIBackgroundBlurView"), @selector(removeFromSuperview), (IMP)&override_SiriUIBackgroundBlurView_removeFromSuperview, (IMP *)&orig_SiriUIBackgroundBlurView_removeFromSuperview);
-    MSHookMessageEx(objc_getClass("SBDashBoardCameraPageViewController"), @selector(viewWillAppear:), (IMP)&override_SBDashBoardCameraPageViewController_viewWillAppear, (IMP *)&orig_SBDashBoardCameraPageViewController_viewWillAppear);
-    MSHookMessageEx(objc_getClass("SBDashBoardCameraPageViewController"), @selector(viewWillDisappear:), (IMP)&override_SBDashBoardCameraPageViewController_viewWillDisappear, (IMP *)&orig_SBDashBoardCameraPageViewController_viewWillDisappear);
-    MSHookMessageEx(objc_getClass("CSModalButton"), @selector(didMoveToWindow), (IMP)&override_CSModalButton_didMoveToWindow, (IMP *)&orig_CSModalButton_didMoveToWindow);
-    MSHookMessageEx(objc_getClass("CSModalButton"), @selector(removeFromSuperview), (IMP)&override_CSModalButton_removeFromSuperview, (IMP *)&orig_CSModalButton_removeFromSuperview);
-    MSHookMessageEx(objc_getClass("SBLockScreenEmergencyCallViewController"), @selector(viewWillAppear:), (IMP)&override_SBLockScreenEmergencyCallViewController_viewWillAppear, (IMP *)&orig_SBLockScreenEmergencyCallViewController_viewWillAppear);
-    MSHookMessageEx(objc_getClass("SBLockScreenEmergencyCallViewController"), @selector(viewWillDisappear:), (IMP)&override_SBLockScreenEmergencyCallViewController_viewWillDisappear, (IMP *)&orig_SBLockScreenEmergencyCallViewController_viewWillDisappear);
-    MSHookMessageEx(objc_getClass("NSProcessInfo"), @selector(isLowPowerModeEnabled), (IMP)&override_NSProcessInfo_isLowPowerModeEnabled, (IMP *)&orig_NSProcessInfo_isLowPowerModeEnabled);
+	MSHookMessageEx(objc_getClass("SBHomeScreenViewController"), @selector(viewWillAppear:),
+		(IMP)&override_SBHomeScreenViewController_viewWillAppear,
+		(IMP *)&orig_SBHomeScreenViewController_viewWillAppear);
+	MSHookMessageEx(objc_getClass("SBHomeScreenViewController"),
+		@selector(viewWillDisappear:),
+		(IMP)&override_SBHomeScreenViewController_viewWillDisappear,
+		(IMP *)&orig_SBHomeScreenViewController_viewWillDisappear);
 	MSHookMessageEx(
 		objc_getClass("CCUIModularControlCenterOverlayViewController"),
 		@selector(viewWillAppear:),

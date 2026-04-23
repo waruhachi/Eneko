@@ -48,6 +48,10 @@ BOOL pfDisableInLowPowerMode;
 - (void)adjustFrame;
 @end
 
+@interface SBHomeScreenViewController : UIViewController
+- (void)adjustFrame;
+@end
+
 @interface CCUIModularControlCenterOverlayViewController : UIViewController
 @end
 
