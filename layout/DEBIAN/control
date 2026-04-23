@@ -2,9 +2,9 @@ Package: dev.traurige.eneko
 Name: Eneko
 Depends: firmware (>= 14.0), mobilesubstrate, preferenceloader, com.mrgcgamer.libgcuniversal
 Conflicts: love.litten.eneko
-Version: 1.4
+Version: 1.5
 Architecture: iphoneos-arm
 Description: Live wallpapers for iOS
-Maintainer: Traurige <hello@traurige.dev>
+Maintainer: waruhachi <156133757+waruhachi@users.noreply.github.com>
 Author: Traurige <hello@traurige.dev>
 Section: Tweaks
