@@ -5,12 +5,14 @@
 //  Created by Alexandra (@Traurige)
 //
 
-#import <substrate.h>
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
-#import "GcUniversal/GcImagePickerUtils.h"
-#import "../Preferences/PreferenceKeys.h"
+#import <roothide.h>
+#import <substrate.h>
+
 #import "../Preferences/NotificationKeys.h"
+#import "../Preferences/PreferenceKeys.h"
+#import "GcUniversal/GcImagePickerUtils.h"
 
 BOOL isLockScreenVisible = YES;
 BOOL isHomeScreenVisible = NO;
@@ -18,17 +20,17 @@ BOOL isScreenOn = YES;
 BOOL isInCall = NO;
 BOOL isInLowPowerMode = NO;
 
-AVQueuePlayer* lockScreenPlayer;
-AVPlayerItem* lockScreenPlayerItem;
-AVPlayerLooper* lockScreenPlayerLooper;
-AVPlayerLayer* lockScreenPlayerLayer;
+AVQueuePlayer *lockScreenPlayer;
+AVPlayerItem *lockScreenPlayerItem;
+AVPlayerLooper *lockScreenPlayerLooper;
+AVPlayerLayer *lockScreenPlayerLayer;
 
-AVQueuePlayer* homeScreenPlayer;
-AVPlayerItem* homeScreenPlayerItem;
-AVPlayerLooper* homeScreenPlayerLooper;
-AVPlayerLayer* homeScreenPlayerLayer;
+AVQueuePlayer *homeScreenPlayer;
+AVPlayerItem *homeScreenPlayerItem;
+AVPlayerLooper *homeScreenPlayerLooper;
+AVPlayerLayer *homeScreenPlayerLayer;
 
-NSUserDefaults* preferences;
+NSUserDefaults *preferences;
 BOOL pfEnabled;
 BOOL pfEnableLockScreenWallpaper;
 CGFloat pfLockScreenVolume;

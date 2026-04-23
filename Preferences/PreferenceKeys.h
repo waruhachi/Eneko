@@ -5,18 +5,20 @@
 //  Created by Alexandra (@Traurige)
 //
 
-static NSString* const kPreferencesIdentifier = @"dev.traurige.eneko.preferences";
+#import <Foundation/Foundation.h>
 
-static NSString* const kPreferenceKeyEnabled = @"Enabled";
-static NSString* const kPreferenceKeyEnableLockScreenWallpaper = @"EnableLockScreenWallpaper";
-static NSString* const kPreferenceKeyLockScreenWallpaper = @"LockScreenWallpaper";
-static NSString* const kPreferenceKeyLockScreenVolume = @"LockScreenVolume";
-static NSString* const kPreferenceKeyEnableHomeScreenWallpaper = @"EnableHomeScreenWallpaper";
-static NSString* const kPreferenceKeyHomeScreenWallpaper = @"HomeScreenWallpaper";
-static NSString* const kPreferenceKeyHomeScreenVolume = @"HomeScreenVolume";
-static NSString* const kPreferenceKeyZoomWallpaper = @"ZoomWallpaper";
-static NSString* const kPreferenceKeyMuteWhenMusicPlays = @"MuteWhenMusicPlays";
-static NSString* const kPreferenceKeyDisableInLowPowerMode = @"DisableInLowPowerMode";
+static NSString *const kPreferencesIdentifier = @"dev.traurige.eneko.preferences";
+
+static NSString *const kPreferenceKeyEnabled = @"Enabled";
+static NSString *const kPreferenceKeyEnableLockScreenWallpaper = @"EnableLockScreenWallpaper";
+static NSString *const kPreferenceKeyLockScreenWallpaper = @"LockScreenWallpaper";
+static NSString *const kPreferenceKeyLockScreenVolume = @"LockScreenVolume";
+static NSString *const kPreferenceKeyEnableHomeScreenWallpaper = @"EnableHomeScreenWallpaper";
+static NSString *const kPreferenceKeyHomeScreenWallpaper = @"HomeScreenWallpaper";
+static NSString *const kPreferenceKeyHomeScreenVolume = @"HomeScreenVolume";
+static NSString *const kPreferenceKeyZoomWallpaper = @"ZoomWallpaper";
+static NSString *const kPreferenceKeyMuteWhenMusicPlays = @"MuteWhenMusicPlays";
+static NSString *const kPreferenceKeyDisableInLowPowerMode = @"DisableInLowPowerMode";
 
 static BOOL const kPreferenceKeyEnabledDefaultValue = YES;
 static BOOL const kPreferenceKeyEnableLockScreenWallpaperDefaultValue = NO;

@@ -5,4 +5,6 @@
 //  Created by Alexandra (@Traurige)
 //
 
-static NSString* const kNotificationKeyPreferencesReload = @"dev.traurige.eneko.preferences.reload";
+#import <Foundation/Foundation.h>
+
+static NSString *const kNotificationKeyPreferencesReload = @"dev.traurige.eneko.preferences.reload";
